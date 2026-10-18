@@ -64,8 +64,9 @@ wallet if anything differs. The page names the file and the release it doesn't m
 
    Both MD5s equal the S3 ETags the Wayback Machine recorded, so these are the bytes Safe's bucket
    served. We hash them. We never run them.
-3. The extension: download `imprimatur-extension.zip` from the latest release, unzip, open
-   `chrome://extensions`, turn on Developer mode, "Load unpacked". Open a demo site and press Sign. On
+3. The extension: download [`imprimatur-extension.zip`](https://imprimatur-checkpoint.vercel.app/imprimatur-extension.zip),
+   unzip, open `chrome://extensions`, turn on Developer mode, "Load unpacked". Or build it:
+   `pnpm --filter @imprimatur/extension build` and load `apps/extension/dist`. Open a demo site and press Sign. On
    the tampered site the wallet popup never opens. Without a wallet installed, the demo uses a wallet
    built into the page that shows only a message hash, like the blind-signing setup on Feb 21.
 

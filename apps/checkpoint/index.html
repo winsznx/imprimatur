@@ -69,6 +69,30 @@
         <div id="origin-rows"></div>
       </section>
 
+      <section class="use" aria-labelledby="use-title">
+        <h2 id="use-title">Use it</h2>
+        <div class="use-columns">
+          <div>
+            <h3>If you sign transactions</h3>
+            <ol>
+              <li><a href="/imprimatur-extension.zip" download>Download the extension</a> and unzip it.</li>
+              <li>Open <code class="mono">chrome://extensions</code>, turn on Developer mode, choose Load unpacked.</li>
+              <li>Open a demo site above and press Sign. On the tampered one, the wallet never opens.</li>
+            </ol>
+          </div>
+          <div>
+            <h3>If you ship a frontend</h3>
+            <p>One step after your build. The release key lives in your repository's secrets, not on the web host.</p>
+            <pre class="mono">- uses: winsznx/imprimatur@main
+  env:
+    IMPRIMATUR_PK: ${{ secrets.RELEASE_KEY }}
+  with:
+    origin: app.example.org
+    build-dir: dist</pre>
+          </div>
+        </div>
+      </section>
+
       <section class="yourself" aria-labelledby="yourself-title">
         <h2 id="yourself-title">Run it without this page</h2>
         <p>Every verdict above comes from one query per site. Paste it into any Arkiv client, or run the CLI:</p>
