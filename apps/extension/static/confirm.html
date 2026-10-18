@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Imprimatur: sign anyway?</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body class="confirm">
+    <p class="mark">Imprimatur</p>
+    <p class="origin" id="origin"></p>
+    <p class="stamp" data-gate="warn">Nothing vouches for this code</p>
+    <p class="strip" id="strip"></p>
+    <p class="quiet">The page asked for <code id="method"></code>. If you sign anyway, the request goes to your wallet.</p>
+    <div class="actions">
+      <button data-answer="cancel" class="primary">Don't sign</button>
+      <button data-answer="sign">Sign anyway</button>
+    </div>
+    <script src="confirm.js"></script>
+  </body>
+</html>

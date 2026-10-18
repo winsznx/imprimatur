@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Imprimatur",
+  "version": "0.1.0",
+  "description": "Blocks wallet signing when a dapp's scripts aren't the release its team signed onto Arkiv.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi1LJVSKRO07FVa2pA9CtQNa+J0oClikIZYsPacT9EzxDIT+SjlPkmRN7VLEVQ81i6VLcuc2tDA8VRLaGZZQSDmLo4Od1fcE9QRqfAO+N6vUtSGcjYqd5IJhun+yIFyZnwioc+8djJPZW5db7yqFdFzCR2Qm3Rcvee/g6FolCmQ43tBt2LcEFjZ2BfatU9v7BRTqt2rnfzqdGSVq8c7e1FuLj0z+8cn9OhtKYqieyGusZjIjAgBS8rLp+bDaZrmkmPgTWuohN33UBNbylsc948XAxv5q9uhQCOqtHRdPV3/f3FT4LTQlAcPJ1DbMAPRRzV5vwLdiEY/hRDu4z2MTZkwIDAQAB",
+  "minimum_chrome_version": "116",
+  "permissions": ["storage", "sidePanel", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://localhost/*"],
+      "js": ["inpage.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://*/*", "http://localhost/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://imprimatur-clean.vercel.app/*",
+      "https://imprimatur-tampered.vercel.app/*",
+      "https://imprimatur-forged.vercel.app/*",
+      "https://imprimatur-stolen-key.vercel.app/*"
+    ]
+  },
+  "side_panel": { "default_path": "panel.html" },
+  "action": { "default_title": "Imprimatur" },
+  "icons": { "16": "icon-16.png", "48": "icon-48.png", "128": "icon-128.png" }
+}
