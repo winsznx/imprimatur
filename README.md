@@ -133,7 +133,7 @@ code from this repo). Both agree on every site. Entities and transactions: [`/ar
 
 | Site | Verdict | What the user reads |
 |---|---|---|
-| clean | VERIFIED | 2 files match release v1.4.2 signed by 0x1830…fd81, 2 of 2 approvals. |
+| clean | VERIFIED | 2 files match release v1.4.3 signed by 0x1830…fd81, 2 of 2 approvals. (v1.4.2 was revoked on camera and the same bytes re-signed) |
 | tampered | MISMATCH | index-CI7WBpgv.js hash 2ffa05…d053 is not in release v1.4.2 signed by 0x1830…fd81. Signing blocked. |
 | forged | MISMATCH | …Signing blocked. 1 forged release from 0xFf6d…4645 ignored. |
 | stolen-key | PENDING | Release v1.4.3 has 1 of 2 approvals. Signing blocked until another signer approves it. |

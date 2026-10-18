@@ -18,3 +18,14 @@ If the testnet is wiped, these transactions are the record; rerun the script to 
 | checkpoint (real production build): release v0.1.0 | publisher | [0xddc8e1cb…](https://tiramisu.explorer.arkiv.network/entity/0xddc8e1cbb8a69aa2a2835fced5c742b745c27894d72a8d135397a3b91c6d7503) | [0xa5061abf…](https://tiramisu.explorer.arkiv.network/tx/0xa5061abf324c48976318177a9c6091fd0c3a7fb9a86f332f5f4a4b7f4e29195c) | 6555 ms |
 | checkpoint (real production build): approval of v0.1.0 | maintainer A | [0x34cb230b…](https://tiramisu.explorer.arkiv.network/entity/0x34cb230b956de402c50239a6755ea2027733cd0c395db58b28dca80fdc83658a) | [0xb15b1f72…](https://tiramisu.explorer.arkiv.network/tx/0xb15b1f7237043f7cec53a5394b8956e2d1ec0d3a6102c6edb13a7ca52770e821) | 6841 ms |
 | replay: Safe's clean chunk, reconstructed | replay | [0x8895214b…](https://tiramisu.explorer.arkiv.network/entity/0x8895214b292b715928e147a3751c1d8720b0dc44ce635d428cceb39c28c754b9) | [0xd42e330b…](https://tiramisu.explorer.arkiv.network/tx/0xd42e330b86ce1dcb6f55772384ba61ddb359a78a93b91b0fdbbd8a61740d88d9) | 3245 ms |
+
+## Live revocation, recorded for the demo film (Oct 18 ~06:50 UTC)
+
+| Step | Key | Entity | Transaction |
+|---|---|---|---|
+| clean: revoke v1.4.2, reason compromised, burned in the same batch | maintainer B | [0xf11a9133…](https://tiramisu.explorer.arkiv.network/entity/0xf11a9133ce1e704a20a2ae58b090193b747a1f1ba74f320722eac7aa3ddc15ec) | [0x02a03d79…](https://tiramisu.explorer.arkiv.network/tx/0x02a03d795c4281ab9295806151b5c50a3e8205bfbfc2ea86f409b8ca88eebdf8) |
+| clean: same bytes re-signed as v1.4.3 | publisher | [0x0b83c065…](https://tiramisu.explorer.arkiv.network/entity/0x0b83c065359a06c17de076819bb472583cbc71a682be6243e9779a21a7166e43) | |
+| clean: approval of v1.4.3 | maintainer A | [0xcbcedddf…](https://tiramisu.explorer.arkiv.network/entity/0xcbcedddf0566bec1a1e3b097412d298e83cba553775963c1787c316da5af1b3d) | [0x200358b2…](https://tiramisu.explorer.arkiv.network/tx/0x200358b2b01ed20b51c34ec43d608f481e0e9c87a02fe8e37ed255f8f48b87bc) |
+
+The open tab showed the block 6.3 s after the CLI started, which includes the CLI's own lookup before
+it sends; the measured send-to-red time is in `proof/results/revocation-*.json` (median 3.9 s).
