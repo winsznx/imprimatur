@@ -40,9 +40,9 @@ async function nextSeq(reader: Reader, origin: string, signer: Hex): Promise<big
 export async function publishRelease(
   wallet: WalletClient,
   reader: Reader,
-  options: { origin: string; version: string; commit: string; manifest: ReleaseManifest; graceMs?: number },
+  options: { origin: string; version: string; commit: string; manifest: ReleaseManifest; graceMs?: number; seq?: bigint },
 ): Promise<WriteResult & { seq: bigint }> {
-  const seq = await nextSeq(reader, options.origin, wallet.account.address)
+  const seq = options.seq ?? (await nextSeq(reader, options.origin, wallet.account.address))
   const started = performance.now()
   const { entityKey, txHash } = await wallet.createEntity({
     attributes: {
