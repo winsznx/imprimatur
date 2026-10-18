@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="Checks a site's scripts against the release its team signed onto Arkiv, from outside the site." />
+    <title>Imprimatur Checkpoint</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <header class="top">
+      <p class="wordmark">Imprimatur <span>Checkpoint</span></p>
+      <p class="live" id="live" data-state="connecting">Connecting to Tiramisu</p>
+    </header>
+
+    <main>
+      <section class="intro">
+        <h1>Don't sign for code nobody signed.</h1>
+        <p>
+          This page fetches each site's scripts from outside the site, hashes them, and checks them against the
+          release its team signed onto Arkiv. It never runs the code it checks. The verdict comes from who created
+          the release on chain, not from anything the release says about itself.
+        </p>
+      </section>
+
+      <section class="replay" aria-labelledby="replay-title">
+        <div class="replay-head">
+          <h2 id="replay-title">The file that drained Bybit</h2>
+          <p>
+            app.safe.global served <code class="mono">_app-52c9031bfa03da47.js</code> to every visitor. On Feb 19 2025
+            attackers replaced it in Safe's S3 bucket. It behaved normally for everyone except two Safe addresses, one of
+            them Bybit's cold wallet. Both versions are in the Wayback Machine.
+          </p>
+        </div>
+        <ol class="timeline" aria-label="Timeline, UTC">
+          <li><time datetime="2025-02-13T11:35:08Z">Feb 13, 11:35</time> v1.50.3 deployed</li>
+          <li data-bad><time datetime="2025-02-19T15:29:43Z">Feb 19, 15:29</time> file replaced, same name</li>
+          <li data-bad><time datetime="2025-02-21T14:13:35Z">Feb 21, 14:13</time> signers approve, $1.5B leaves</li>
+          <li><time datetime="2025-02-21T14:15:32Z">Feb 21, 14:15</time> original file back, 117 s later</li>
+        </ol>
+        <div class="replay-rows" id="replay-rows"></div>
+        <details class="replay-check">
+          <summary>Check the bytes yourself</summary>
+          <p>
+            Wayback doesn't allow cross-origin reads, so this page uses the hashes <code class="mono">imprimatur replay</code>
+            computed from these URLs and runs the Arkiv half live. The hashes take one command each:
+          </p>
+          <pre class="mono" id="replay-curl"></pre>
+          <p>
+            The release checked here is our reconstruction, published by
+            <a class="mono" id="replay-signer" href="#"></a>. Safe never published releases. We hash these bytes and never
+            run them.
+          </p>
+        </details>
+      </section>
+
+      <section class="origins" aria-labelledby="origins-title">
+        <div class="section-head">
+          <h2 id="origins-title">Four demo sites, one team</h2>
+          <p>
+            Same Treasury Demo build, same three team keys, two approvals required. What differs is what each site serves
+            and what has been written to Arkiv about it. The changes are simulations, labelled on each site.
+          </p>
+        </div>
+        <div id="origin-rows"></div>
+      </section>
+
+      <section class="yourself" aria-labelledby="yourself-title">
+        <h2 id="yourself-title">Run it without this page</h2>
+        <p>Every verdict above comes from one query per site. Paste it into any Arkiv client, or run the CLI:</p>
+        <pre class="mono" id="cli-block"></pre>
+        <table class="keys" id="keys-table">
+          <caption>Keys that create the entities, all on Tiramisu</caption>
+          <thead>
+            <tr><th scope="col">Role</th><th scope="col">Address</th><th scope="col">Creates</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>
+        Open source under MIT. Demo sites are simulations on the Tiramisu testnet with synthetic addresses. Nothing about
+        you is written to Arkiv: this page only reads.
+      </p>
+    </footer>
+
+    <dialog class="sim" id="sim-wallet">
+      <form method="dialog">
+        <p class="sim-title">Simulated wallet</p>
+        <p class="sim-note">Part of this page, to show what reaches a wallet. Nothing is signed.</p>
+        <p class="sim-request" id="sim-request"></p>
+        <div class="sim-actions">
+          <button class="button" value="close">Close</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

@@ -8,6 +8,22 @@ importers:
 
   .: {}
 
+  apps/checkpoint:
+    dependencies:
+      '@imprimatur/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      viem:
+        specifier: ^2.57.7
+        version: 2.57.7(typescript@5.9.3)
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^7.1.12
+        version: 7.3.7(@types/node@24.19.2)(tsx@4.23.15)
+
   apps/demo:
     dependencies:
       viem:
