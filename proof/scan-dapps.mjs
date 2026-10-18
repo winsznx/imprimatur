@@ -100,10 +100,12 @@ function compare(first, second) {
   let same = 0
   const changed = []
   const onlyOnce = []
+  const unreadable = []
   for (const url of urls) {
     const a = first.files[url]
     const b = second.files[url]
-    if (a && b) {
+    if (a === "unreadable" || b === "unreadable") unreadable.push(url)
+    else if (a && b) {
       if (a === b) same += 1
       else changed.push(url)
     } else onlyOnce.push(url)
@@ -118,6 +120,7 @@ function compare(first, second) {
     sameBothLoads: same,
     changedSameUrl: changed,
     presentInOneLoadOnly: onlyOnce.length,
+    bodyUnreadable: unreadable.length,
     inline: { first: inlineA.size, second: inlineB.size, identical: inlineSame },
     cacheReadBack: { checked: refetch.length, identical: refetchSame },
   }
@@ -132,8 +135,10 @@ for (const site of SITES) {
 console.log(`waiting ${PAUSE_MS / 60_000} min before the second load`)
 await new Promise((resolve) => setTimeout(resolve, PAUSE_MS))
 const results = []
+const secondPass = {}
 for (const site of SITES) {
   const second = await load(browser, site)
+  secondPass[site] = second
   const summary = compare(firstPass[site], second)
   results.push({ site, ...summary, errors: [firstPass[site].error, second.error].filter(Boolean) })
   console.log(`load 2 ${site} ${JSON.stringify({ ...summary, changedSameUrl: summary.changedSameUrl.length })}`)
@@ -142,5 +147,5 @@ await browser.close()
 
 mkdirSync(new URL("./results/", import.meta.url), { recursive: true })
 const out = new URL(`./results/scan-${new Date().toISOString().replace(/[:.]/g, "-")}.json`, import.meta.url)
-writeFileSync(out, JSON.stringify({ ranAt: new Date().toISOString(), pauseMinutes: PAUSE_MS / 60_000, browser: "chromium (playwright 1.64.1)", results, raw: firstPass }, null, 2))
+writeFileSync(out, JSON.stringify({ ranAt: new Date().toISOString(), pauseMinutes: PAUSE_MS / 60_000, browser: "chromium (playwright 1.64.1)", results, raw: { first: firstPass, second: secondPass } }, null, 2))
 console.log(`wrote ${out.pathname}`)

@@ -2,6 +2,9 @@
 // nothing imported from this repo. If it reaches the same verdict as @imprimatur/core, the schema is
 // a data contract another team can build on without asking us.
 //
+// It implements "Deciding" steps 1 to 6 and 8 from the schema. It leaves out watcher observations
+// (display only) and the grace window for superseded releases (step 7).
+//
 //   node examples/independent-check.mjs https://imprimatur-tampered.vercel.app/
 import { createHash } from "node:crypto"
 
