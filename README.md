@@ -178,6 +178,19 @@ budget after 20 cases and resumed with an access key: [`part1`](proof/results/ca
 send to verdict REVOKED. 5 runs: median 3,877 ms, max 4,058 ms, 5 of 5 flipped. In 3 runs the tab knew
 before the CLI got its own receipt (viem polls receipts every 4 s on this chain; see friction #10).
 
+### A watcher has been re-hashing the demo sites every minute since Oct 18 06:25 UTC
+
+`imprimatur watch --interval 60` runs as a systemd service on a separate server. Each pass re-fetches
+every bound site's page and every file its release lists, decides locally against records it read from
+Arkiv once (and re-reads only when a WebSocket event says a bound key wrote something), and writes one
+burned `observation` per changed file per day from the watcher key
+[`0xE94f…63df`](https://tiramisu.explorer.arkiv.network/address/0xE94f0a5D30f06CbAEbe2dc8b0c7f5BfFEAD863df).
+A pass over five sites takes about 5 seconds and costs no Arkiv queries.
+
+The Safe file was wrong on app.safe.global from Feb 19 15:29:43 UTC to Feb 21 14:15:32 UTC, 46 hours 46
+minutes. A watcher on this loop would have flagged it about 2,800 times before the theft, and written
+the first observation within a minute of the swap.
+
 ### Would real dapps pass? 15 production frontends, loaded twice
 
 Before asking any team to pin its scripts, we checked whether real dapp frontends serve the same bytes
