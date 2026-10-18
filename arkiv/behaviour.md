@@ -15,6 +15,7 @@ reads UNREACHABLE) were checked against these numbers and kept.
 | `createEntity` send to receipt, polling every 500 ms | 3 | 3,829 ms | 3,742 to 5,116 |
 | `executeBatch` create + burn transfer, send to receipt | 1 | 2,414 ms | |
 | `select("*")…limit(200).fetch()` | 5 | 359 ms | 327 to 369 |
+| Revocation sent to an open verifier showing REVOKED (`proof/revocation-latency.ts`) | 5 | 3,877 ms | 3,341 to 4,058 |
 | Block time reported by `arkiv_getBlockTiming` | | 2 s | |
 
 What we took from it:

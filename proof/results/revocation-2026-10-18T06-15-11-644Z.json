@@ -1,0 +1,35 @@
+{
+  "ranAt": "2026-10-18T06:15:11.646Z",
+  "rows": [
+    {
+      "run": 0,
+      "eventMs": 3532,
+      "revokedMs": 3877,
+      "receiptMs": 4044
+    },
+    {
+      "run": 1,
+      "eventMs": 3699,
+      "revokedMs": 4052,
+      "receiptMs": 4847
+    },
+    {
+      "run": 2,
+      "eventMs": 2809,
+      "revokedMs": 3341,
+      "receiptMs": 2612
+    },
+    {
+      "run": 3,
+      "eventMs": 2914,
+      "revokedMs": 3347,
+      "receiptMs": 3612
+    },
+    {
+      "run": 4,
+      "eventMs": 3710,
+      "revokedMs": 4058,
+      "receiptMs": 4847
+    }
+  ]
+}
