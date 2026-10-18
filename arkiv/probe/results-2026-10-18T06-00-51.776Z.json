@@ -1,0 +1,167 @@
+{
+  "startedAt": "2026-10-18T06:00:51.776Z",
+  "sdk": "0.8.1",
+  "node": "v24.19.0",
+  "blockTiming": {
+    "currentBlock": "726742",
+    "currentBlockTime": 1792303250,
+    "blockDuration": 2
+  },
+  "timings": [
+    {
+      "run": 0,
+      "receiptMs": 7140,
+      "visibleMs": 7476,
+      "wsMs": 4582
+    },
+    {
+      "run": 1,
+      "receiptMs": 6521,
+      "visibleMs": 6847,
+      "wsMs": 3600
+    },
+    {
+      "run": 2,
+      "receiptMs": 6399,
+      "visibleMs": 6728,
+      "wsMs": 3245
+    },
+    {
+      "run": 3,
+      "receiptMs": 6428,
+      "visibleMs": 6748,
+      "wsMs": 3039
+    },
+    {
+      "run": 4,
+      "receiptMs": 6419,
+      "visibleMs": 6746,
+      "wsMs": 2783
+    }
+  ],
+  "queryMs": [
+    369,
+    363,
+    359,
+    330,
+    327
+  ],
+  "costs": [
+    {
+      "method": "eth_blockNumber",
+      "status": 200,
+      "ms": 262,
+      "cost": null,
+      "quotaUsed": null,
+      "rateLimit": "limit=600, remaining=505, reset=16"
+    },
+    {
+      "method": "arkiv_query",
+      "status": 200,
+      "ms": 320,
+      "cost": "100",
+      "quotaUsed": null,
+      "rateLimit": "limit=600, remaining=504, reset=16"
+    },
+    {
+      "method": "arkiv_getEntityCount",
+      "status": 200,
+      "ms": 324,
+      "cost": null,
+      "quotaUsed": null,
+      "rateLimit": "limit=600, remaining=511, reset=15"
+    },
+    {
+      "method": "arkiv_getBlockTiming",
+      "status": 200,
+      "ms": 266,
+      "cost": null,
+      "quotaUsed": null,
+      "rateLimit": "limit=600, remaining=525, reset=15"
+    },
+    {
+      "method": "arkiv_getEntity",
+      "status": 200,
+      "ms": 265,
+      "cost": null,
+      "quotaUsed": null,
+      "rateLimit": "limit=600, remaining=510, reset=15"
+    },
+    {
+      "method": "arkiv_query",
+      "status": 200,
+      "ms": 9732,
+      "cost": "100",
+      "quotaUsed": null,
+      "rateLimit": "limit=600, remaining=503, reset=15"
+    }
+  ],
+  "readonly": {
+    "patch": {
+      "ok": false,
+      "error": "Transaction failed: entity 0xbfe56b73…08b086 was created readonly, so its contents can never change. Its expiry can still be extended, and it can be transferred or deleted"
+    },
+    "extendByOwner": {
+      "ok": true,
+      "value": {
+        "txHash": "0x82f35082b4a88eb8ff9f30420ae03f1c68bd0faca8fbdd96798e0b2f8a782745",
+        "entityKey": "0xbfe56b73e172d8e0cb9293a7dff3e63caad0d1008f548437b52eb304de08b086",
+        "expiresAt": "730376"
+      }
+    },
+    "extendByStranger": {
+      "ok": false,
+      "error": "Transaction failed: entity 0xbfe56b73…08b086 is owned by 0x1830F524dF9CE6D347189dF08C1054edDB89fd81, not 0x69a1F684ED2E7c958B9aE4808a81DBCE8f5bec84"
+    },
+    "deleteByOwner": {
+      "ok": true,
+      "value": {
+        "txHash": "0xbb4bb31a9c8f7a4cf03fcf621e2c31c8ac01f0b62e36f42bd15d3f91114868fe",
+        "entityKey": "0xbfe56b73e172d8e0cb9293a7dff3e63caad0d1008f548437b52eb304de08b086"
+      }
+    }
+  },
+  "burn": {
+    "predictedMatches": true,
+    "receiptMs": 2414,
+    "owner": "0x000000000000000000000000000000000000dEaD",
+    "creator": "0x1830F524dF9CE6D347189dF08C1054edDB89fd81",
+    "flags": {
+      "readonly": true,
+      "permissionlessExtension": true,
+      "raw": 3
+    },
+    "deleteByCreator": {
+      "ok": false,
+      "error": "Transaction failed: entity 0xfdd442c7…a0ee68 is owned by 0x000000000000000000000000000000000000dEaD, not 0x1830F524dF9CE6D347189dF08C1054edDB89fd81"
+    },
+    "extendByStranger": {
+      "ok": true,
+      "value": {
+        "txHash": "0xfff97caf6ad7da63a8aca043097962cdc4c8c75db35657721781d9be23378a68",
+        "entityKey": "0xfdd442c71e47dddd3c28d85158112146dab2594ff7e39c341674798ad8a0ee68",
+        "expiresAt": "730385"
+      }
+    },
+    "stillThere": true
+  },
+  "operators": {
+    "ne": {
+      "ok": false,
+      "error": "Query rejected (type, -32002): Requested resource not available.. Query: type = str('probe') AND run != i32(1)"
+    },
+    "exists": {
+      "ok": false,
+      "error": "Query rejected (type, -32002): Requested resource not available.. Query: type = str('probe') AND EXISTS(run)"
+    },
+    "hasType": {
+      "ok": false,
+      "error": "Query rejected (type, -32002): Requested resource not available.. Query: type = str('probe') AND TYPEOF(run) = i32"
+    }
+  },
+  "uppercase": {
+    "ok": false,
+    "error": "Transaction failed: an attribute name holds \"T\" (0x54) at byte 0, which is outside the name charset (\"A\"-\"Z\", \"a\"-\"z\", \"0\"-\"9\", \".\", \"-\" and \"_\", with a letter first)"
+  },
+  "finishedAt": "2026-10-18T06:02:18.852Z"
+}

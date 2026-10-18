@@ -16,7 +16,7 @@ pnpm install && pnpm --filter @imprimatur/arkiv-evidence repro friction/read-sid
 
 | Surface | How we used it | Issues |
 |---|---|---|
-| TypeScript SDK | queries, `createEntity`, `executeBatch`, `extendEntity`, `predictEntityKeys`, `watchEntityEvents` | 1, 2, 3, 5, 6, 7 |
+| TypeScript SDK | queries, `createEntity`, `executeBatch`, `extendEntity`, `predictEntityKeys`, `watchEntityEvents` | 1, 2, 3, 5, 6, 7, 10, 11 |
 | Direct JSON-RPC | the independent client (`examples/independent-check.mjs`), cost measurements | 1, 4 |
 | WebSocket events | live revocation in the extension and the Checkpoint | 6 |
 | Docs | fundamentals, access keys, Tiramisu page | 2, 4 |
@@ -35,6 +35,13 @@ pnpm install && pnpm --filter @imprimatur/arkiv-evidence repro friction/read-sid
   `RateLimit`, `Arkiv-Cost` and `Retry-After` to scripts, so the Checkpoint runs with no backend.
 - **`createdBy` versus attributes.** Filtering on `$creator` did exactly what the Security rubric
   describes. A forged release with every attribute copied never reaches the verdict.
+- **Burning a revocation in the same batch.** `predictEntityKeys`, then one `executeBatch` that creates
+  the entity with `readonly` + `permissionlessExtension` and transfers it to `0x…dEaD`: the key matched
+  the prediction, the creator's delete was refused, another key's extension went through. Exactly what
+  the design needed, first try (`arkiv/behaviour.md`).
+- **Error messages on writes.** "created readonly, so its contents can never change. Its expiry can still
+  be extended, and it can be transferred or deleted" told us the one thing `readonly` doesn't do, which is
+  why revocations are burned.
 - **SDK source quality.** Errors say what to do (`InvalidPredicateError` for `$createdAt` tells you to
   filter in JavaScript). The 0.8.1 package ships its TypeScript source, which is how we checked batch
   ordering and event shapes before writing code.
@@ -127,6 +134,32 @@ pnpm install && pnpm --filter @imprimatur/arkiv-evidence repro friction/read-sid
 ### 9. The faucet needs a connected wallet and a captcha (reported-issues #20)
 
 - We generated seven role keys for the demo. The faucet only sends to a connected wallet's own cooldown,
-  so funding a fresh CLI key means a human connecting a browser wallet first. That stalled every write
-  in our build for hours while the read side, the UI and the extension were finished.
+  so funding a fresh CLI key means a human connecting a browser wallet first, claiming 10 GLM, then
+  moving it. That stalled every write in our build for about six hours while the read side, the UI and
+  the extension were finished. 10 GLM covered seven keys and every write in this repo.
 - Suggestion: a CLI-friendly faucet (paste an address, captcha only), as #20 asks.
+
+### 10. Receipts arrive twice as late as they could: the `tiramisu` chain object has no `blockTime`
+
+- Expected: viem's receipt polling follows Arkiv's 2 s blocks.
+- Actual: `tiramisu.blockTime` is unset, so viem falls back to polling every 4,000 ms. Measured on
+  `createEntity`: 7,307 / 6,421 / 6,436 ms send to receipt by default, 5,116 / 3,829 / 3,742 ms with
+  `pollingInterval: 500`. The WebSocket `EntityCreated` event lands at a median 3,245 ms, before the
+  default receipt.
+- Repro: `pnpm --filter @imprimatur/arkiv-evidence repro friction/receipt-polling.ts` (needs a funded
+  `PUBLISHER_PK`; three writes per mode).
+- Workaround: `pollingInterval: 1_000` on the wallet client (`packages/cli/src/env.ts`).
+- Suggestion: add `blockTime: 2_000` to `defineChain` in `src/chains/tiramisu.ts`, alongside the
+  `blockExplorers` fix in PR #120.
+
+### 11. The node rejects an uppercase attribute name with a message that says uppercase is allowed
+
+- Expected: either `Type` is a valid name (the SDK's grammar in `src/attr/names.ts` is
+  `/^[A-Za-z][A-Za-z0-9._-]*$/` and its docs say names are case-sensitive), or the SDK refuses it.
+- Actual: the SDK sends it and the transaction fails with: `an attribute name holds "T" (0x54) at byte 0,
+  which is outside the name charset ("A"-"Z", "a"-"z", "0"-"9", ".", "-" and "_", with a letter first)`.
+  The node rejects `T` while listing `"A"-"Z"` as allowed. The docs' lowercase snake_case rule is right;
+  the SDK grammar and the node's error message are not.
+- Repro: step 7 of `arkiv/probe/probe.ts`, output in `arkiv/probe/results-2026-10-18T06-00-51.776Z.json`.
+- Suggestion: make `NAME_RE` lowercase-only so the SDK refuses before gas is spent, and fix the charset
+  in the node's message.

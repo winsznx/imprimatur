@@ -16,6 +16,9 @@ export function walletFrom(envName: string) {
   return createWalletClient({
     chain: tiramisu,
     account,
+    // The tiramisu chain object has no blockTime, so viem polls receipts every 4 s against 2 s
+    // blocks. Measured: 6.4 s to a receipt by default, 3.8 s at 500 ms polling (arkiv/friction.md #10).
+    pollingInterval: 1_000,
     transport: http(process.env.ARKIV_RPC ?? TIRAMISU_RPC, { retryCount: 1, timeout: 60_000 }),
   })
 }

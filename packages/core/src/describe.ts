@@ -40,7 +40,7 @@ export function describe(decision: Decision, now: number = Date.now()): string {
 
   switch (decision.verdict) {
     case "VERIFIED": {
-      const base = `${decision.checked} file${decision.checked === 1 ? "" : "s"} match release ${version} ${signedBy(release?.creator ?? "0x")}, ${approvals.have} of ${approvals.need} approvals.`
+      const base = `${decision.checked} file${decision.checked === 1 ? " matches" : "s match"} release ${version} ${signedBy(release?.creator ?? "0x")}, ${approvals.have} of ${approvals.need} approvals.`
       const superseded = decision.supersededBy
         ? ` Replaced by v${decision.supersededBy.version} ${minutesAgo(now, decision.supersededBy.published)}, still inside the grace window.`
         : ""
