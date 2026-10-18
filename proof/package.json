@@ -1,0 +1,17 @@
+{
+  "name": "@imprimatur/proof",
+  "private": true,
+  "type": "module",
+  "description": "Measurements published in the README: real-dapp scan, tamper campaign, revocation latency.",
+  "scripts": {
+    "scan": "node scan-dapps.mjs",
+    "campaign": "tsx --env-file-if-exists=../.env campaign.ts"
+  },
+  "dependencies": {
+    "@imprimatur/core": "workspace:*"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1",
+    "tsx": "^4.20.6"
+  }
+}

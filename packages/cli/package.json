@@ -7,7 +7,7 @@
   "bin": { "imprimatur": "./dist/index.js" },
   "files": ["dist"],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --clean --target node22 --noExternal @imprimatur/core",
+    "build": "tsup",
     "dev": "tsx --env-file-if-exists=../../.env src/index.ts",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p ."

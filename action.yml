@@ -1,0 +1,70 @@
+name: Imprimatur
+description: Sign a frontend release onto Arkiv after the build, or renew the lease on the current one.
+branding:
+  icon: check-square
+  color: gray-dark
+inputs:
+  mode:
+    description: "publish (after a build) or heartbeat (on a daily schedule)"
+    default: publish
+  build-dir:
+    description: Directory with the built site, for publish
+    default: dist
+  origin:
+    description: Host the build is served from, e.g. app.example.org
+    required: true
+  version:
+    description: Release version shown to users
+    default: ${{ github.ref_name }}
+  base:
+    description: URL path the build is served under
+    default: /
+  signers:
+    description: Comma-separated signer addresses, for origins outside the preload list
+    default: ""
+  recovery:
+    description: Recovery key address, for origins outside the preload list
+    default: ""
+  threshold:
+    description: Approvals required, for origins outside the preload list
+    default: "1"
+outputs:
+  release:
+    description: Entity key of the new release (publish mode)
+    value: ${{ steps.run.outputs.release }}
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 11
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - name: Build the CLI
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: pnpm install --frozen-lockfile --filter @imprimatur/cli... && pnpm --filter @imprimatur/cli build
+    - id: run
+      name: imprimatur ${{ inputs.mode }}
+      shell: bash
+      env:
+        CLI: ${{ github.action_path }}/packages/cli/dist/index.js
+        MODE: ${{ inputs.mode }}
+        BUILD_DIR: ${{ inputs.build-dir }}
+        ORIGIN: ${{ inputs.origin }}
+        VERSION: ${{ inputs.version }}
+        BASE: ${{ inputs.base }}
+        SIGNERS: ${{ inputs.signers }}
+        RECOVERY: ${{ inputs.recovery }}
+        THRESHOLD: ${{ inputs.threshold }}
+      run: |
+        binding=()
+        if [ -n "$SIGNERS" ]; then binding=(--signers "$SIGNERS" --recovery "$RECOVERY" --threshold "$THRESHOLD"); fi
+        if [ "$MODE" = "heartbeat" ]; then
+          node "$CLI" heartbeat --origin "$ORIGIN" "${binding[@]}"
+        else
+          node "$CLI" publish "$BUILD_DIR" --origin "$ORIGIN" --version "$VERSION" --base "$BASE" --commit "$GITHUB_SHA" --json > release.json
+          cat release.json
+          echo "release=$(node -e 'console.log(require("./release.json").entityKey)')" >> "$GITHUB_OUTPUT"
+        fi
