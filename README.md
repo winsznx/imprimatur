@@ -142,7 +142,7 @@ Measured, with denominators and the misses. Raw output in [`proof/results`](proo
 - Not checked: web workers, service workers, WASM, code fetched and `eval`ed at runtime.
 - The RPC node sees which preloaded origins you check. Unlisted sites are never queried.
 - Tiramisu is a testnet. Entities can be wiped; creation transactions are listed in
-  [`/arkiv/evidence.md`](arkiv/evidence.md) and `pnpm --filter @imprimatur/cli dev` can recreate them.
+  [`/arkiv/evidence.md`](arkiv/evidence.md) and `packages/cli/scripts/publish-demo.ts` writes them again.
 
 ## Licence
 

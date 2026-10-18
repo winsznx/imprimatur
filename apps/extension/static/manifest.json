@@ -26,7 +26,8 @@
       "https://imprimatur-clean.vercel.app/*",
       "https://imprimatur-tampered.vercel.app/*",
       "https://imprimatur-forged.vercel.app/*",
-      "https://imprimatur-stolen-key.vercel.app/*"
+      "https://imprimatur-stolen-key.vercel.app/*",
+      "https://imprimatur-checkpoint.vercel.app/*"
     ]
   },
   "side_panel": { "default_path": "panel.html" },

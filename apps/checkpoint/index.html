@@ -6,12 +6,7 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="description" content="Checks a site's scripts against the release its team signed onto Arkiv, from outside the site." />
     <title>Imprimatur Checkpoint</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap"
-    />
+    <link rel="preload" href="/fonts/atkinson-hyperlegible-next-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/src/style.css" />
     <script type="module" src="/src/main.ts"></script>
   </head>
@@ -64,10 +59,11 @@
 
       <section class="origins" aria-labelledby="origins-title">
         <div class="section-head">
-          <h2 id="origins-title">Four demo sites, one team</h2>
+          <h2 id="origins-title">Four demo sites and this page, one team</h2>
           <p>
             Same Treasury Demo build, same three team keys, two approvals required. What differs is what each site serves
             and what has been written to Arkiv about it. The changes are simulations, labelled on each site.
+            The last row is this page's own production release.
           </p>
         </div>
         <div id="origin-rows"></div>

@@ -1,6 +1,7 @@
 import {
   type Binding,
   BYBIT_REPLAY,
+  CHECKPOINT_ORIGIN,
   createArkivReader,
   createArkivSocket,
   type Decision,
@@ -52,6 +53,10 @@ const SITES: Record<string, { name: string; what: string }> = {
   [DEMO_ORIGINS.stolenKey]: {
     name: "Stolen CI key",
     what: "The changed build, released with the team's real CI key. Nobody else approved it.",
+  },
+  [CHECKPOINT_ORIGIN]: {
+    name: "This page",
+    what: "Not a simulation: the production build you're reading, signed by the publisher key and approved by a maintainer.",
   },
 }
 

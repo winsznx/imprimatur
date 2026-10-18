@@ -26,6 +26,9 @@ export const DEMO_ORIGINS = {
   stolenKey: "imprimatur-stolen-key.vercel.app",
 } as const
 
+/** Imprimatur's own Checkpoint: a real production build, signed like any team would sign theirs. */
+export const CHECKPOINT_ORIGIN = "imprimatur-checkpoint.vercel.app"
+
 /**
  * Origins whose signers ship with Imprimatur, the way browsers ship the HSTS preload list. A
  * bucket or DNS takeover can't change this list.
@@ -35,6 +38,7 @@ export const PRELOAD: readonly Binding[] = [
   { origin: DEMO_ORIGINS.tampered, label: "Treasury Demo (simulated bucket swap)", ...demoTeam },
   { origin: DEMO_ORIGINS.forged, label: "Treasury Demo (forged release)", ...demoTeam },
   { origin: DEMO_ORIGINS.stolenKey, label: "Treasury Demo (stolen CI key)", ...demoTeam },
+  { origin: CHECKPOINT_ORIGIN, label: "Imprimatur Checkpoint", ...demoTeam },
 ]
 
 /**

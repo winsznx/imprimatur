@@ -1,18 +1,19 @@
 /**
- * Writes the demo state to Tiramisu and records every transaction in /arkiv/evidence.md. Run again
+ * Publishes the demo releases to Tiramisu with the real role keys and records every transaction in /arkiv/evidence.md. Run again
  * after a testnet wipe to recreate it.
  *
  *   pnpm --filter @imprimatur/demo build
- *   pnpm --filter @imprimatur/cli exec tsx --env-file=../../.env scripts/seed-demo.ts
+ *   pnpm --filter @imprimatur/cli exec tsx --env-file=../../.env scripts/publish-demo.ts
  */
 import { writeFileSync } from "node:fs"
-import { BYBIT_REPLAY, DEMO_ORIGINS, explorerEntity, explorerTx } from "@imprimatur/core"
+import { BYBIT_REPLAY, CHECKPOINT_ORIGIN, DEMO_ORIGINS, explorerEntity, explorerTx } from "@imprimatur/core"
 import { approveRelease, publishRelease, type WriteResult } from "../src/arkiv"
 import { reader, walletFrom } from "../src/env"
 import { buildManifest } from "../src/manifest"
 
 const CLEAN_DIR = new URL("../../../apps/demo/dist", import.meta.url).pathname
 const TAMPERED_DIR = new URL("../../../apps/demo/dist-tampered", import.meta.url).pathname
+const CHECKPOINT_DIR = new URL("../../../apps/checkpoint/dist", import.meta.url).pathname
 const COMMIT = process.env.SEED_COMMIT ?? "0".repeat(40)
 
 const rpc = reader()
@@ -23,6 +24,7 @@ const replayKey = walletFrom("REPLAY_PK")
 
 const clean = await buildManifest(CLEAN_DIR, { base: "/", extern: [], framework: "vite" })
 const tampered = await buildManifest(TAMPERED_DIR, { base: "/", extern: [], framework: "vite" })
+const checkpoint = await buildManifest(CHECKPOINT_DIR, { base: "/", extern: [], framework: "vite" })
 
 const rows: { step: string; who: string; result: WriteResult }[] = []
 const record = <T extends WriteResult>(step: string, who: string, result: T): T => {
@@ -31,9 +33,9 @@ const record = <T extends WriteResult>(step: string, who: string, result: T): T 
   return result
 }
 
-async function signedAndApproved(origin: string, step: string) {
-  const release = record(`${step}: release v1.4.2`, "publisher", await publishRelease(publisher, rpc, { origin, version: "1.4.2", commit: COMMIT, manifest: clean }))
-  record(`${step}: approval of v1.4.2`, "maintainer A", await approveRelease(maintainer, { origin, release: release.entityKey, version: "1.4.2" }))
+async function signedAndApproved(origin: string, step: string, manifest = clean, version = "1.4.2") {
+  const release = record(`${step}: release v${version}`, "publisher", await publishRelease(publisher, rpc, { origin, version, commit: COMMIT, manifest }))
+  record(`${step}: approval of v${version}`, "maintainer A", await approveRelease(maintainer, { origin, release: release.entityKey, version }))
   return release
 }
 
@@ -51,6 +53,7 @@ record(
   "publisher",
   await publishRelease(publisher, rpc, { origin: DEMO_ORIGINS.stolenKey, version: "1.4.3", commit: COMMIT, manifest: tampered }),
 )
+await signedAndApproved(CHECKPOINT_ORIGIN, "checkpoint (real production build)", checkpoint, "0.1.0")
 record(
   "replay: Safe's clean chunk, reconstructed",
   "replay",
@@ -71,7 +74,7 @@ record(
 const lines = [
   "# On-chain evidence",
   "",
-  `Written by \`packages/cli/scripts/seed-demo.ts\` on ${new Date().toISOString()}. Tiramisu, chain 7738577.`,
+  `Written by \`packages/cli/scripts/publish-demo.ts\` on ${new Date().toISOString()}. Tiramisu, chain 7738577.`,
   "If the testnet is wiped, these transactions are the record; rerun the script to recreate the state.",
   "",
   "| Step | Key | Entity | Transaction | Receipt |",
