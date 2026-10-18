@@ -1,5 +1,14 @@
 {
   "extends": "../tsconfig.base.json",
-  "compilerOptions": { "types": ["node"], "allowJs": true, "checkJs": false },
-  "include": ["campaign.ts"]
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": [
+    "campaign.ts",
+    "revocation-latency.ts"
+  ]
 }

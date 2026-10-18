@@ -4,7 +4,7 @@ import type { Binding } from "../src/binding"
 import { type DecideInput, decide, GATE, type ObservedResource } from "../src/decide"
 import { describe } from "../src/describe"
 import { emptyRecords, type ReleaseRecord, type VerdictRecords } from "../src/entities"
-import { verdictPredicate } from "../src/query"
+import { multiOriginPredicate, verdictPredicate } from "../src/query"
 
 const A: Hex = "0x1830F524dF9CE6D347189dF08C1054edDB89fd81"
 const B: Hex = "0x69a1F684ED2E7c958B9aE4808a81DBCE8f5bec84"
@@ -30,6 +30,7 @@ const key = (n: number): Hex => `0x${n.toString(16).padStart(64, "0")}`
 function release(n: number, creator: Hex, files: Record<string, string>, extra: Partial<ReleaseRecord> = {}): ReleaseRecord {
   return {
     key: key(n),
+    origin: "app.example",
     creator,
     version: `1.${n}.0`,
     seq: BigInt(n),
@@ -68,7 +69,7 @@ function input(records: Partial<VerdictRecords>, overrides: Partial<DecideInput>
 
 const approvedClean = (): Partial<VerdictRecords> => ({
   releases: [release(1, A, cleanFiles)],
-  approvals: [{ key: key(100), creator: B, release: key(1), at: NOW - 9 * HOUR }],
+  approvals: [{ key: key(100), origin: "app.example", creator: B, release: key(1), at: NOW - 9 * HOUR }],
 })
 
 suite("decide", () => {
@@ -129,7 +130,7 @@ suite("decide", () => {
     const decision = decide(
       input({
         ...records,
-        revocations: [{ key: key(200), creator: B, owner: "0x000000000000000000000000000000000000dEaD", release: key(1), reason: "compromised", at: NOW, createdAt: 600n }],
+        revocations: [{ key: key(200), origin: "app.example", creator: B, owner: "0x000000000000000000000000000000000000dEaD", release: key(1), reason: "compromised", at: NOW, createdAt: 600n }],
       }),
     )
     expect(decision.verdict).toBe("REVOKED")
@@ -141,7 +142,7 @@ suite("decide", () => {
     const decision = decide(
       input({
         ...records,
-        revocations: [{ key: key(200), creator: FORGER, owner: FORGER, release: key(1), reason: "compromised", at: NOW, createdAt: 600n }],
+        revocations: [{ key: key(200), origin: "app.example", creator: FORGER, owner: FORGER, release: key(1), reason: "compromised", at: NOW, createdAt: 600n }],
       }),
     )
     expect(decision.verdict).toBe("VERIFIED")
@@ -150,7 +151,7 @@ suite("decide", () => {
   it("blocks everything a revoked signer created", () => {
     const records = approvedClean()
     const decision = decide(
-      input({ ...records, keyRevocations: [{ key: key(300), creator: RECOVERY, signer: A, at: NOW, createdAt: 700n }] }),
+      input({ ...records, keyRevocations: [{ key: key(300), origin: "app.example", creator: RECOVERY, signer: A, at: NOW, createdAt: 700n }] }),
     )
     expect(decision.verdict).toBe("KEY_REVOKED")
     expect(decision.revokedSigner).toBe(A)
@@ -159,7 +160,7 @@ suite("decide", () => {
   it("ignores a key revocation that wasn't written by the recovery key", () => {
     const records = approvedClean()
     const decision = decide(
-      input({ ...records, keyRevocations: [{ key: key(300), creator: B, signer: A, at: NOW, createdAt: 700n }] }),
+      input({ ...records, keyRevocations: [{ key: key(300), origin: "app.example", creator: B, signer: A, at: NOW, createdAt: 700n }] }),
     )
     expect(decision.verdict).toBe("VERIFIED")
   })
@@ -170,7 +171,7 @@ suite("decide", () => {
     const decision = decide(
       input({
         releases: [...records.releases!, next],
-        approvals: [...records.approvals!, { key: key(101), creator: C, release: next.key, at: NOW }],
+        approvals: [...records.approvals!, { key: key(101), origin: "app.example", creator: C, release: next.key, at: NOW }],
       }),
     )
     expect(decision.verdict).toBe("VERIFIED")
@@ -184,7 +185,7 @@ suite("decide", () => {
     const decision = decide(
       input({
         releases: [...records.releases!, next],
-        approvals: [...records.approvals!, { key: key(101), creator: C, release: next.key, at: NOW }],
+        approvals: [...records.approvals!, { key: key(101), origin: "app.example", creator: C, release: next.key, at: NOW }],
       }),
     )
     expect(decision.verdict).toBe("STALE")
@@ -227,9 +228,9 @@ suite("decide", () => {
     const records: Partial<VerdictRecords> = {
       ...approvedClean(),
       observations: [
-        { key: key(400), creator: WATCHER, path: "/assets/vendor.js", sha256: sha(9), expected: sha(2), release: key(1), at: NOW - 60_000 },
-        { key: key(401), creator: FORGER, path: "/assets/vendor.js", sha256: sha(9), expected: sha(2), release: key(1), at: NOW - 60_000 },
-        { key: key(402), creator: WATCHER, path: "/assets/vendor.js", sha256: sha(9), expected: sha(2), release: key(1), at: NOW - 2 * HOUR },
+        { key: key(400), origin: "app.example", creator: WATCHER, path: "/assets/vendor.js", sha256: sha(9), expected: sha(2), release: key(1), at: NOW - 60_000 },
+        { key: key(401), origin: "app.example", creator: FORGER, path: "/assets/vendor.js", sha256: sha(9), expected: sha(2), release: key(1), at: NOW - 60_000 },
+        { key: key(402), origin: "app.example", creator: WATCHER, path: "/assets/vendor.js", sha256: sha(9), expected: sha(2), release: key(1), at: NOW - 2 * HOUR },
       ],
     }
     expect(decide(input(records)).observations.map((o) => o.watcher)).toEqual([WATCHER])
@@ -244,5 +245,19 @@ suite("verdictPredicate", () => {
     expect(rendered).toContain(`$creator = addr(${RECOVERY})`)
     expect(rendered).toContain(`type = str('keyrevocation')`)
     expect(rendered).toContain(`at > u64(${NOW - HOUR})`)
+  })
+})
+
+suite("multiOriginPredicate", () => {
+  it("asks for every origin of one team in a single predicate", () => {
+    // #given two origins bound to the same keys
+    const other: Binding = { ...binding, origin: "other.example" }
+
+    // #when the merged predicate is rendered
+    const rendered = multiOriginPredicate([binding, other], NOW).toString()
+
+    // #then both origins appear once, sharing one copy of the trust branches
+    expect(rendered).toContain(`origin = str('app.example') OR origin = str('other.example')`)
+    expect(rendered.split(`$creator = addr(${RECOVERY})`)).toHaveLength(2)
   })
 })

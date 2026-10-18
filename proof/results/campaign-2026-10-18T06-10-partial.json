@@ -1,0 +1,148 @@
+{
+  "ranAt": "2026-10-18T06:10Z",
+  "run": "mvdfalrd",
+  "stoppedBy": "HTTP 429 from the keyless budget (ratelimit limit=10000, remaining=0, retry-after 1913 s) before poisoned-at-build-time and lease-lapsed",
+  "rows": [
+    {
+      "build": "vite",
+      "variant": "clean",
+      "expect": "VERIFIED",
+      "got": "VERIFIED",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "byte-flip",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "injected-script-tag",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "injected-inline-script",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "lazy-chunk-swapped",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "stylesheet-swapped",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "clean",
+      "expect": "VERIFIED",
+      "got": "VERIFIED",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "byte-flip",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "injected-script-tag",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "injected-inline-script",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "lazy-chunk-swapped",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "stylesheet-swapped",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "cdn-version-swapped",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "plain",
+      "variant": "remote-code-eval",
+      "expect": "VERIFIED",
+      "got": "VERIFIED",
+      "pass": true,
+      "miss": "the signed app runs text it fetches at runtime; that text is never a script resource"
+    },
+    {
+      "build": "vite",
+      "variant": "rebuild-same-commit",
+      "expect": "VERIFIED",
+      "got": "VERIFIED",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "forged-release",
+      "expect": "MISMATCH",
+      "got": "MISMATCH",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "forged, attribute filter",
+      "expect": "VERIFIED",
+      "got": "VERIFIED",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "stolen-ci-key",
+      "expect": "PENDING",
+      "got": "PENDING",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "revoked-release",
+      "expect": "REVOKED",
+      "got": "REVOKED",
+      "pass": true
+    },
+    {
+      "build": "vite",
+      "variant": "revoked-signer-key",
+      "expect": "KEY_REVOKED",
+      "got": "KEY_REVOKED",
+      "pass": true
+    }
+  ]
+}

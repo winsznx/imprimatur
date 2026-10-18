@@ -12,17 +12,21 @@ import {
   emptyRecords,
   explorerAddress,
   explorerEntity,
-  fetchVerdictRecords,
+  fetchRecordsForBindings,
+  fetchReleaseCreatorsFor,
   fileName,
   GATE,
   observeResources,
   PRELOAD,
   resourcesInHtml,
   shortHex,
+  type ObservedResource,
   type Verdict,
-  verify,
+  type VerdictRecords,
+  verdictPredicate,
   watchBinding,
 } from "@imprimatur/core"
+import type { Hex } from "viem"
 import { h, link, mono } from "./dom"
 
 const BLOCK_SECONDS = 2
@@ -144,24 +148,55 @@ function trySign(decision: Decision, status: HTMLElement): void {
 
 interface Checked {
   decision: Decision
-  query?: string
+  query: string
   error?: string
 }
 
-async function checkSite(binding: Binding): Promise<Checked> {
-  const url = `https://${binding.origin}/`
-  let html: string
+interface ArkivSnapshot {
+  byOrigin: Map<string, VerdictRecords>
+  forgeries: Map<string, { key: Hex; creator: Hex }[]>
+  atBlock: bigint
+  query: string
+}
+
+/**
+ * Two queries per refresh, for every row on the page: one for all verdicts, one for forgeries.
+ * Each arkiv_query costs a visitor 100 units of a keyless budget of about 100 queries.
+ */
+async function loadArkiv(): Promise<ArkivSnapshot | Error> {
   try {
-    html = await (await fetch(url, { cache: "no-store" })).text()
-  } catch (error) {
-    return {
-      decision: decide({ origin: binding.origin, binding, observed: [], records: emptyRecords(), reachable: false, now: Date.now(), atBlock: 0n }),
-      error: `Couldn't fetch ${url}: ${error instanceof Error ? error.message : String(error)}`,
-    }
+    const [records, forgeries] = await Promise.all([
+      fetchRecordsForBindings(reader, [...PRELOAD, BYBIT_REPLAY.binding], Date.now()),
+      fetchReleaseCreatorsFor(reader, PRELOAD.map((binding) => binding.origin)),
+    ])
+    return { ...records, forgeries }
+  } catch (cause) {
+    return cause instanceof Error ? cause : new Error(String(cause))
   }
-  const observed = await observeResources(resourcesInHtml(html, url), url, fetchBytes)
-  const result = await verify({ reader, origin: binding.origin, binding, observed, countForgeries: true })
-  return { decision: result.decision, ...(result.query && { query: result.query }), ...(result.error && { error: result.error.message }) }
+}
+
+async function observeSite(binding: Binding): Promise<ObservedResource[] | Error> {
+  const url = `https://${binding.origin}/`
+  try {
+    const html = await (await fetch(url, { cache: "no-store" })).text()
+    return await observeResources(resourcesInHtml(html, url), url, fetchBytes)
+  } catch (error) {
+    return new Error(`Couldn't fetch ${url}: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+function decideFor(binding: Binding, observed: ObservedResource[], arkiv: ArkivSnapshot | Error, now: number): Decision {
+  const reachable = !(arkiv instanceof Error)
+  return decide({
+    origin: binding.origin,
+    binding,
+    observed,
+    records: reachable ? (arkiv.byOrigin.get(binding.origin) ?? emptyRecords()) : emptyRecords(),
+    forgeries: reachable ? (arkiv.forgeries.get(binding.origin) ?? []) : [],
+    reachable,
+    now,
+    atBlock: reachable ? arkiv.atBlock : 0n,
+  })
 }
 
 function renderSite(binding: Binding, checked: Checked | undefined): HTMLElement {
@@ -184,7 +219,7 @@ function renderSite(binding: Binding, checked: Checked | undefined): HTMLElement
             return button
           })(),
           link(`https://${binding.origin}/`, "Open the site"),
-          checked.query ? h("details", { class: "query" }, h("summary", {}, "Query"), h("pre", { class: "mono" }, checked.query)) : null,
+          h("details", { class: "query" }, h("summary", {}, "Query for this site"), h("pre", { class: "mono" }, checked.query)),
         ),
         status,
       )
@@ -206,58 +241,32 @@ function renderSite(binding: Binding, checked: Checked | undefined): HTMLElement
 }
 
 const results = new Map<string, Checked>()
+let lastBlock = 0n
 
-function renderSites(): void {
+function renderSites(pageQuery?: string): void {
   const container = document.querySelector("#origin-rows")
   if (!container) return
   container.replaceChildren(...PRELOAD.map((binding) => renderSite(binding, results.get(binding.origin))))
-  const lastQuery = results.get(DEMO_ORIGINS.tampered)?.query
   const cli = document.querySelector("#cli-block")
   if (cli) {
     cli.textContent = [
       "git clone https://github.com/winsznx/imprimatur && cd imprimatur && pnpm install",
       `pnpm --filter @imprimatur/cli dev verify https://${DEMO_ORIGINS.tampered}/`,
       "",
-      lastQuery ? `# the query it runs\n${lastQuery}` : "",
+      pageQuery ? `# the one query this page ran for every row above\n${pageQuery}` : "",
     ].join("\n")
   }
 }
 
-async function checkSites(): Promise<void> {
-  await Promise.all(
-    PRELOAD.map(async (binding) => {
-      results.set(binding.origin, await checkSite(binding))
-      renderSites()
-    }),
-  )
-  setLive("watching")
-}
-
-async function renderReplay(): Promise<void> {
+function renderReplay(arkiv: ArkivSnapshot | Error, now: number): void {
   const container = document.querySelector("#replay-rows")
   if (!container) return
   const { binding, path, clean, tampered } = BYBIT_REPLAY
-  const now = Date.now()
-  let fetched: Awaited<ReturnType<typeof fetchVerdictRecords>> | undefined
-  let error: string | undefined
-  try {
-    fetched = await fetchVerdictRecords(reader, binding, now)
-  } catch (cause) {
-    error = cause instanceof Error ? cause.message : String(cause)
-  }
   const rows = [
     { label: "Copy captured Feb 14 2025", url: clean.url, sha256: clean.sha256, bytes: clean.bytes },
     { label: "Copy captured Feb 19 2025, 17:29", url: tampered.url, sha256: tampered.sha256, bytes: tampered.bytes },
   ].map((copy) => {
-    const decision = decide({
-      origin: binding.origin,
-      binding,
-      observed: [{ kind: "file", path, sha256: copy.sha256 }],
-      records: fetched?.records ?? emptyRecords(),
-      reachable: fetched !== undefined,
-      now,
-      atBlock: fetched?.atBlock ?? 0n,
-    })
+    const decision = decideFor(binding, [{ kind: "file", path, sha256: copy.sha256 }], arkiv, now)
     return h(
       "article",
       { class: "row row-replay", "data-gate": GATE[decision.verdict] },
@@ -268,7 +277,7 @@ async function renderReplay(): Promise<void> {
         h("p", { class: "strip" }, describe(decision, now)),
         h("p", { class: "hash" }, h("span", {}, "sha256 "), mono(copy.sha256)),
         decision.release ? facts(decision) : null,
-        error ? h("p", { class: "row-error" }, error) : null,
+        arkiv instanceof Error ? h("p", { class: "row-error" }, arkiv.message) : null,
       ),
       stamp(decision.verdict),
     )
@@ -276,11 +285,30 @@ async function renderReplay(): Promise<void> {
   container.replaceChildren(...rows)
 }
 
+async function refresh(): Promise<void> {
+  const [arkiv, observedSites] = await Promise.all([loadArkiv(), Promise.all(PRELOAD.map(observeSite))])
+  const now = Date.now()
+  PRELOAD.forEach((binding, index) => {
+    const observed = observedSites[index] ?? []
+    const failure = observed instanceof Error ? observed : arkiv instanceof Error ? arkiv : undefined
+    results.set(binding.origin, {
+      decision: decideFor(binding, observed instanceof Error ? [] : observed, observed instanceof Error ? observed : arkiv, now),
+      query: verdictPredicate(binding, now).toString(),
+      ...(failure && { error: failure.message }),
+    })
+  })
+  if (!(arkiv instanceof Error)) lastBlock = arkiv.atBlock
+  renderSites(arkiv instanceof Error ? undefined : arkiv.query)
+  renderReplay(arkiv, now)
+  if (arkiv instanceof Error) setLive("offline", `Arkiv unreachable: ${arkiv.message}`)
+  else setLive("watching")
+}
+
 function setLive(state: "connecting" | "watching" | "offline", detail?: string): void {
   const live = document.querySelector<HTMLElement>("#live")
   if (!live) return
   live.dataset.state = state
-  const block = [...results.values()].map((r) => r.decision.atBlock).reduce((a, b) => (b > a ? b : a), 0n)
+  const block = lastBlock
   live.textContent =
     state === "watching"
       ? `Live on Tiramisu${block > 0n ? `, block ${block.toLocaleString("en-US")}` : ""}${detail ? `. ${detail}` : ""}`
@@ -322,7 +350,7 @@ function startLive(): void {
     watchBinding(socket, watched, {
       onChange: (reason) => {
         setLive("watching", `Re-checking after an entity was ${reason}`)
-        Promise.all([checkSites(), renderReplay()]).catch(reportFailure)
+        refresh().catch(reportFailure)
       },
       onError: (error) => setLive("offline", error.message),
       debounceMs: 800,
@@ -338,6 +366,5 @@ function reportFailure(error: unknown): void {
 
 renderStatic()
 renderSites()
-renderReplay().catch(reportFailure)
-checkSites().catch(reportFailure)
+refresh().catch(reportFailure)
 startLive()

@@ -5,6 +5,7 @@ import { ENTITY_TYPE } from "./schema"
 
 export interface ReleaseRecord {
   key: Hex
+  origin: string
   creator: Hex
   version: string
   seq: bigint
@@ -22,6 +23,7 @@ export interface ReleaseRecord {
 
 export interface ApprovalRecord {
   key: Hex
+  origin: string
   creator: Hex
   release: Hex
   at: number
@@ -29,6 +31,7 @@ export interface ApprovalRecord {
 
 export interface RevocationRecord {
   key: Hex
+  origin: string
   creator: Hex
   owner: Hex
   release: Hex
@@ -39,6 +42,7 @@ export interface RevocationRecord {
 
 export interface KeyRevocationRecord {
   key: Hex
+  origin: string
   creator: Hex
   signer: Hex
   at: number
@@ -47,6 +51,7 @@ export interface KeyRevocationRecord {
 
 export interface ObservationRecord {
   key: Hex
+  origin: string
   creator: Hex
   path: string
   sha256: string
@@ -113,6 +118,8 @@ function parseEntity(entity: Entity): ParsedEntity | undefined {
   const { key, creator } = entity
   if (!key || !creator) return undefined
   const read = reader(entity)
+  const origin = read.str("origin")
+  if (!origin) return undefined
 
   switch (read.str("type")) {
     case ENTITY_TYPE.release: {
@@ -129,6 +136,7 @@ function parseEntity(entity: Entity): ParsedEntity | undefined {
         kind: "release",
         record: {
           key,
+          origin,
           creator,
           version,
           seq,
@@ -149,7 +157,7 @@ function parseEntity(entity: Entity): ParsedEntity | undefined {
       const release = read.key("release")
       const at = read.u64("at")
       if (!release || at === undefined) return undefined
-      return { kind: "approval", record: { key, creator, release, at: Number(at) } }
+      return { kind: "approval", record: { key, origin, creator, release, at: Number(at) } }
     }
     case ENTITY_TYPE.revocation: {
       const release = read.key("release")
@@ -160,6 +168,7 @@ function parseEntity(entity: Entity): ParsedEntity | undefined {
         kind: "revocation",
         record: {
           key,
+          origin,
           creator,
           owner: entity.owner ?? creator,
           release,
@@ -175,7 +184,7 @@ function parseEntity(entity: Entity): ParsedEntity | undefined {
       if (!signer || at === undefined) return undefined
       return {
         kind: "keyrevocation",
-        record: { key, creator, signer, at: Number(at), createdAt: entity.createdAt ?? 0n },
+        record: { key, origin, creator, signer, at: Number(at), createdAt: entity.createdAt ?? 0n },
       }
     }
     case ENTITY_TYPE.observation: {
@@ -185,7 +194,7 @@ function parseEntity(entity: Entity): ParsedEntity | undefined {
       const release = read.key("release")
       const at = read.u64("at")
       if (!path || !sha256 || !expected || !release || at === undefined) return undefined
-      return { kind: "observation", record: { key, creator, path, sha256, expected, release, at: Number(at) } }
+      return { kind: "observation", record: { key, origin, creator, path, sha256, expected, release, at: Number(at) } }
     }
     default:
       return undefined
@@ -228,4 +237,23 @@ function decodeJson(payload: Uint8Array | undefined): unknown {
   } catch {
     return undefined
   }
+}
+
+/** Splits records fetched for several origins into one set per origin. */
+export function recordsByOrigin(records: VerdictRecords): Map<string, VerdictRecords> {
+  const byOrigin = new Map<string, VerdictRecords>()
+  const bucket = (origin: string) => {
+    let found = byOrigin.get(origin)
+    if (!found) {
+      found = emptyRecords()
+      byOrigin.set(origin, found)
+    }
+    return found
+  }
+  for (const r of records.releases) bucket(r.origin).releases.push(r)
+  for (const r of records.approvals) bucket(r.origin).approvals.push(r)
+  for (const r of records.revocations) bucket(r.origin).revocations.push(r)
+  for (const r of records.keyRevocations) bucket(r.origin).keyRevocations.push(r)
+  for (const r of records.observations) bucket(r.origin).observations.push(r)
+  return byOrigin
 }

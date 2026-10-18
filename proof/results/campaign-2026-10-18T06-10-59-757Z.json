@@ -1,0 +1,18 @@
+{
+  "ranAt": "2026-10-18T06:11:09.207Z",
+  "run": "mvdffx2l",
+  "only": [
+    "poisoned",
+    "lapsed"
+  ],
+  "rows": [
+    {
+      "build": "vite",
+      "variant": "poisoned-at-build-time",
+      "expect": "VERIFIED",
+      "got": "VERIFIED",
+      "pass": true,
+      "miss": "the team built and signed the poisoned bundle, so it verifies"
+    }
+  ]
+}

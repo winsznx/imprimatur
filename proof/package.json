@@ -5,7 +5,8 @@
   "description": "Measurements published in the README: real-dapp scan, tamper campaign, revocation latency.",
   "scripts": {
     "scan": "node scan-dapps.mjs",
-    "campaign": "tsx --env-file-if-exists=../.env campaign.ts"
+    "campaign": "tsx --env-file-if-exists=../.env campaign.ts",
+    "latency": "tsx --env-file-if-exists=../.env revocation-latency.ts"
   },
   "dependencies": {
     "@imprimatur/core": "workspace:*",

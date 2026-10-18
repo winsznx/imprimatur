@@ -3,7 +3,10 @@
  * tampered build the way the watcher does (every file the server holds, plus what the HTML loads).
  * Variants come from variants.mjs, which imports nothing from the verifier.
  *
- *   pnpm --filter @imprimatur/proof campaign      writes results/campaign-<timestamp>.json
+ *   pnpm --filter @imprimatur/proof campaign [--only name,name]   writes results/campaign-<timestamp>.json
+ *
+ * Rows are written as they finish, so a run cut short (by a 429 on the keyless budget, say) keeps
+ * what it measured. --only runs a subset, matched against the variant or the Arkiv-state case name.
  */
 import { execFileSync } from "node:child_process"
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
@@ -36,6 +39,10 @@ import { buildManifest } from "../packages/cli/src/manifest"
 import { VARIANTS } from "./variants.mjs"
 
 const RUN = Date.now().toString(36)
+const onlyIndex = process.argv.indexOf("--only")
+const ONLY = onlyIndex > 0 ? new Set((process.argv[onlyIndex + 1] ?? "").split(",")) : undefined
+const wanted = (name: string) => !ONLY || ONLY.has(name)
+const OUT = new URL(`./results/campaign-${new Date().toISOString().replace(/[:.]/g, "-")}.json`, import.meta.url)
 const ROOT = new URL("..", import.meta.url).pathname
 const WORK = mkdtempSync(join(tmpdir(), "imprimatur-campaign-"))
 const CDN = "https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"
@@ -113,6 +120,8 @@ const rows: Row[] = []
 function report(build: string, variant: string, expect: string, decision: Decision, extra: Partial<Row> = {}): void {
   const row: Row = { build, variant, expect, got: decision.verdict, pass: decision.verdict === expect, ...extra }
   rows.push(row)
+  mkdirSync(new URL("./results/", import.meta.url), { recursive: true })
+  writeFileSync(OUT, JSON.stringify({ ranAt: new Date().toISOString(), run: RUN, only: ONLY ? [...ONLY] : undefined, rows }, null, 2))
   console.log(`${row.pass ? "as expected" : "UNEXPECTED "}  ${build.padEnd(6)} ${variant.padEnd(26)} expect ${expect.padEnd(11)} got ${decision.verdict}${row.miss ? `  (known miss: ${row.miss})` : ""}`)
 }
 
@@ -128,12 +137,13 @@ const BUILDS = {
 }
 
 // File-level variants, both builds.
-for (const [build, { dir, extern }] of Object.entries(BUILDS)) {
+const fileVariants = ["clean", ...Object.keys(VARIANTS)].some(wanted)
+for (const [build, { dir, extern }] of fileVariants ? Object.entries(BUILDS) : []) {
   const origin = originFor(build)
   await signAndApprove(origin, dir, extern)
-  report(build, "clean", "VERIFIED", await check(origin, dir))
+  if (wanted("clean")) report(build, "clean", "VERIFIED", await check(origin, dir))
   for (const [name, variant] of Object.entries(VARIANTS)) {
-    if (variant.only && variant.only !== build) continue
+    if ((variant.only && variant.only !== build) || !wanted(name)) continue
     const target = join(WORK, `${build}-${name}`)
     variant.make(dir, target)
     report(build, name, variant.expect, await check(origin, target), variant.miss ? { miss: variant.miss } : {})
@@ -142,14 +152,15 @@ for (const [build, { dir, extern }] of Object.entries(BUILDS)) {
 
 // Rebuilding the same commit gives the same bytes, so a team can publish from CI and serve that build.
 const rebuildDir = join(WORK, "vite-rebuild")
-execFileSync("pnpm", ["--filter", "@imprimatur/demo", "exec", "vite", "build", "--outDir", rebuildDir, "--emptyOutDir"], { cwd: ROOT, stdio: "ignore" })
-report("vite", "rebuild-same-commit", "VERIFIED", await check(originFor("vite"), rebuildDir))
+if (wanted("rebuild-same-commit")) execFileSync("pnpm", ["--filter", "@imprimatur/demo", "exec", "vite", "build", "--outDir", rebuildDir, "--emptyOutDir"], { cwd: ROOT, stdio: "ignore" })
+if (wanted("rebuild-same-commit")) report("vite", "rebuild-same-commit", "VERIFIED", await check(originFor("vite"), rebuildDir))
 
 // Arkiv-state variants, each on its own origin so a revocation can't leak into another case.
 const clean = BUILDS.vite.dir
 const tampered = join(WORK, "vite-byte-flip")
+VARIANTS["byte-flip"]?.make(clean, tampered)
 
-{
+if (wanted("forged")) {
   const origin = originFor("forged")
   await signAndApprove(origin, clean, [])
   const manifest = await buildManifest(tampered, { base: "/", extern: [], framework: "campaign" })
@@ -172,33 +183,33 @@ const tampered = join(WORK, "vite-byte-flip")
   })
   report("vite", "forged, attribute filter", "VERIFIED", naive, { note: "the hole $creator closes: without it the forgery passes" })
 }
-{
+if (wanted("stolen")) {
   const origin = originFor("stolen")
   await signAndApprove(origin, clean, [])
   const manifest = await buildManifest(tampered, { base: "/", extern: [], framework: "campaign" })
   await publishRelease(publisher, rpc, { origin, version: "1.0.1", commit: "0".repeat(40), manifest })
   report("vite", "stolen-ci-key", "PENDING", await check(origin, tampered))
 }
-{
+if (wanted("revoked")) {
   const origin = originFor("revoked")
   const release = await signAndApprove(origin, clean, [])
   await createBurned(maintainerB, rpc, { attributes: revocationAttributes(origin, release.entityKey, "compromised"), payload: { reason: "compromised" }, days: 1 })
   report("vite", "revoked-release", "REVOKED", await check(origin, clean))
 }
-{
+if (wanted("keyrevoked")) {
   const origin = originFor("keyrevoked")
   await signAndApprove(origin, clean, [])
   await createBurned(recovery, rpc, { attributes: keyRevocationAttributes(origin, DEMO_KEYS.publisher), payload: { signer: DEMO_KEYS.publisher }, days: 1 })
   report("vite", "revoked-signer-key", "KEY_REVOKED", await check(origin, clean))
 }
-{
+if (wanted("poisoned")) {
   const origin = originFor("poisoned")
   await signAndApprove(origin, tampered, [])
   report("vite", "poisoned-at-build-time", "VERIFIED", await check(origin, tampered), {
     miss: "the team built and signed the poisoned bundle, so it verifies",
   })
 }
-{
+if (wanted("lapsed")) {
   const origin = originFor("lapsed")
   await signAndApprove(origin, clean, [], "1.0.0", 1)
   console.log("waiting 150 s for a 1-minute release to lapse")
@@ -208,8 +219,5 @@ const tampered = join(WORK, "vite-byte-flip")
 
 const passed = rows.filter((r) => r.pass).length
 console.log(`\n${passed} of ${rows.length} as expected; ${rows.filter((r) => r.miss).length} of them are known misses`)
-mkdirSync(new URL("./results/", import.meta.url), { recursive: true })
-const out = new URL(`./results/campaign-${new Date().toISOString().replace(/[:.]/g, "-")}.json`, import.meta.url)
-writeFileSync(out, JSON.stringify({ ranAt: new Date().toISOString(), run: RUN, rows }, null, 2))
-console.log(`wrote ${out.pathname}`)
+console.log(`wrote ${OUT.pathname}`)
 process.exit(0)

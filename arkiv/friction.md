@@ -81,19 +81,25 @@ pnpm install && pnpm --filter @imprimatur/arkiv-evidence repro friction/read-sid
   `packages/core/src/query.ts` does.
 - Suggestion: a `createdByAny(addresses)` helper, or throw on the second call.
 
-### 4. Every `arkiv_query` costs 100 units, whatever it returns, and the budget isn't documented (reported-issues #17, open)
+### 4. Every `arkiv_query` costs 100 units, the keyless budget is 100 queries, and it isn't documented (reported-issues #17, open)
 
 - Expected: a published keyless budget and a per-call cost table.
 - Actual, measured from response headers: `arkiv_query` returning 1 key costs 100; returning 30 full
-  entities with payloads also costs 100. `eth_blockNumber`, `arkiv_getBlockTiming` and
-  `arkiv_getEntityCount` carry no `Arkiv-Cost` header. Issue #17 reports a 10,000-unit keyless budget
-  and a ~40 minute `Retry-After`; we did not burn our IP's budget to confirm the ceiling.
-- Repro: `friction/read-side.ts`, step 4.
-- What it changed for us: one compound query per site instead of one per entity type, and
-  `retryCount: 0` with an 8 s timeout so a 429 shows "Arkiv unreachable" instead of hanging the wallet
-  for 40 minutes. A browser extension that ran a query per tab would exhaust a user's budget in a day.
-- Suggestion: document the budget and the cost table on the access keys page, and make the SDK surface
-  a 429 instead of waiting out `Retry-After`.
+  entities with payloads also costs 100. `eth_blockNumber`, `arkiv_getBlockTiming`,
+  `arkiv_getEntityCount` and raw `arkiv_getEntity` carry no `Arkiv-Cost` header.
+- We hit the ceiling ourselves at 06:13 UTC, midway through the tamper campaign: HTTP 429 with
+  `ratelimit: limit=10000, remaining=0, reset=1913` and `retry-after: 1913`. That is 100 queries per IP
+  and a 32-minute lockout. With an access key the same request returned 200 with
+  `ratelimit: limit=9999, remaining=9998, reset=1` and `arkiv-quota-used-percent: 1`. The campaign rows
+  measured before the 429 are in `proof/results/campaign-2026-10-18T06-10-partial.json`.
+- Repro: `friction/read-side.ts`, step 4, for costs. For the ceiling, run 101 queries from one IP.
+- What it changed for us: the Checkpoint asks one compound query for every site on the page plus one
+  for forgeries (2 per load, down from 11), the extension asks one per page, the watcher reads Arkiv only
+  when a WebSocket event says a bound key wrote something, and every client uses `retryCount: 0` with an
+  8 s timeout so a 429 shows "Arkiv unreachable" instead of hanging a signature for 32 minutes. The CLI,
+  scripts and watcher send an access key as `X-API-KEY`; browsers stay keyless, as the docs require.
+- Suggestion: document the budget, the window and the cost table on the access keys page, and have the
+  SDK raise on 429 instead of waiting out `Retry-After`.
 
 ### 5. `predictEntityKeys` is on the public client but not the wallet client (sdk-js #123, open)
 

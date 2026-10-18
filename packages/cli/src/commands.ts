@@ -1,8 +1,15 @@
 import { execFileSync } from "node:child_process"
 import {
   type Binding,
+  BURN_ADDRESS,
   BYBIT_REPLAY,
+  createArkivSocket,
   type Decision,
+  decide,
+  fetchVerdictRecords,
+  type ObservedResource,
+  type VerdictFetch,
+  watchBinding,
   describe,
   explorerEntity,
   explorerTx,
@@ -207,61 +214,86 @@ export async function verifyUrl(positionals: string[], flags: Flags): Promise<vo
 
 /**
  * The watcher. Every interval it re-fetches each bound origin's page and every file its release
- * lists, from its own network, and writes an observation for each file whose bytes differ. One
- * observation per path and hash per hour, so a long attack leaves a trail without flooding Arkiv.
+ * lists, from its own network, and writes an observation for each file whose bytes differ. Arkiv is
+ * read once at start and again only when a bound key writes (WebSocket), never per pass: at 100
+ * units a query, polling would exhaust the keyless budget in minutes. One observation per file and
+ * hash per day; each lives 30 days and anyone can extend it.
  */
 export async function watch(flags: Flags): Promise<void> {
   const origins = text(flags, "origins")?.split(",").filter(Boolean) ?? PRELOAD.map((b) => b.origin)
+  const bindings = origins.flatMap((origin) => findBinding(origin) ?? [])
   const intervalMs = Number(text(flags, "interval") ?? "60") * 1000
   const wallet = walletFrom(keyEnv(flags, "IMPRIMATUR_WATCHER_PK"))
   const rpc = reader()
+  const cached = new Map<string, VerdictFetch>()
   const reported = new Map<string, number>()
+  const log = (message: string) => console.log(`${new Date().toISOString()} ${message}`)
+
+  const refresh = async (binding: Binding) => {
+    cached.set(binding.origin, await fetchVerdictRecords(rpc, binding, Date.now()))
+  }
+  await Promise.all(bindings.map(refresh))
+
+  const check = async (binding: Binding) => {
+    const fetched = cached.get(binding.origin)
+    if (!fetched) return
+    const started = performance.now()
+    const url = `https://${binding.origin}/`
+    const scan = await scanPage(url)
+    const decideWith = (observed: ObservedResource[]) =>
+      decide({ origin: binding.origin, binding, observed, records: fetched.records, reachable: true, now: Date.now(), atBlock: fetched.atBlock })
+    const first = decideWith(scan.observed)
+    const release = fetched.records.releases.find((r) => r.key === first.release?.key)
+    const observed = release ? mergeObserved(scan.observed, await observeReleaseFiles(url, release)) : scan.observed
+    const decision = decideWith(observed)
+    log(`${binding.origin} ${decision.verdict} (${observed.length} files, ${Math.round(performance.now() - started)} ms)`)
+    if (decision.verdict !== "MISMATCH" || !decision.release) return
+    for (const failing of decision.failing) {
+      const id = `${binding.origin}|${failing.path}|${failing.actual}`
+      if (Date.now() - (reported.get(id) ?? 0) < 86_400_000) continue
+      const written = await createBurned(wallet, rpc, {
+        attributes: observationAttributes({
+          origin: binding.origin,
+          path: failing.path,
+          sha256: failing.actual,
+          expected: failing.expected ?? "",
+          release: decision.release.key,
+        }),
+        payload: { url, fetchedAt: new Date().toISOString(), watcher: "imprimatur-cli/0.1.0" },
+        days: LIFETIME_DAYS.observation,
+      })
+      reported.set(id, Date.now())
+      log(`  observation ${failing.path} -> ${explorerEntity(written.entityKey)}`)
+    }
+  }
 
   const pass = async () => {
-    for (const origin of origins) {
-      const binding = findBinding(origin)
-      if (!binding) continue
-      const started = performance.now()
-      try {
-        const url = `https://${origin}/`
-        const scan = await scanPage(url)
-        const first = await verify({ reader: rpc, origin, binding, observed: scan.observed })
-        const release = first.decision.release
-        const releaseFiles = release
-          ? await observeReleaseFiles(url, await findRelease(rpc, binding, release.key))
-          : []
-        const observed = mergeObserved(scan.observed, releaseFiles)
-        const { decision } = await verify({ reader: rpc, origin, binding, observed })
-        const elapsed = Math.round(performance.now() - started)
-        console.log(`${new Date().toISOString()} ${origin} ${decision.verdict} (${observed.length} files, ${elapsed} ms)`)
-        if (decision.verdict !== "MISMATCH" || !decision.release) continue
-        for (const failing of decision.failing) {
-          const id = `${origin}|${failing.path}|${failing.actual}`
-          if (Date.now() - (reported.get(id) ?? 0) < 3_600_000) continue
-          const written = await createBurned(wallet, rpc, {
-            attributes: observationAttributes({
-              origin,
-              path: failing.path,
-              sha256: failing.actual,
-              expected: failing.expected ?? "",
-              release: decision.release.key,
-            }),
-            payload: { url, fetchedAt: new Date().toISOString(), watcher: "imprimatur-cli/0.1.0" },
-            days: LIFETIME_DAYS.observation,
-          })
-          reported.set(id, Date.now())
-          console.log(`  observation ${failing.path} -> ${explorerEntity(written.entityKey)}`)
-        }
-      } catch (error) {
-        console.error(`${new Date().toISOString()} ${origin} error: ${error instanceof Error ? error.message : String(error)}`)
-      }
+    for (const binding of bindings) {
+      await check(binding).catch((error: unknown) => log(`${binding.origin} error: ${error instanceof Error ? error.message : String(error)}`))
     }
   }
 
   await pass()
   if (flags.once) return
+
+  const everyone: Binding = {
+    origin: "*",
+    signers: [...new Set(bindings.flatMap((b) => b.signers))],
+    threshold: 1,
+    recovery: bindings[0]?.recovery ?? BURN_ADDRESS,
+    watchers: [],
+    source: "preload",
+  }
+  watchBinding(createArkivSocket(), everyone, {
+    onChange: (reason) => {
+      log(`entity ${reason} by a bound key, re-reading Arkiv`)
+      Promise.all(bindings.map(refresh)).catch((error: unknown) => log(`refresh failed: ${String(error)}`))
+    },
+    onError: (error) => log(`websocket: ${error.message}`),
+    debounceMs: 1_000,
+  })
   setInterval(() => {
-    pass().catch((error: unknown) => console.error("watch pass failed", error))
+    pass().catch((error: unknown) => log(`pass failed: ${String(error)}`))
   }, intervalMs)
 }
 
