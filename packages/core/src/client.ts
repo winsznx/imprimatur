@@ -9,12 +9,18 @@ export interface ReaderOptions {
   rpcUrl?: string
   /** A 429 on the keyless budget comes with a ~40 min Retry-After. Fail fast and say UNREACHABLE. */
   timeoutMs?: number
+  /** Server-side only. Arkiv's docs say access keys must not ship in browser code. */
+  accessKey?: string
 }
 
 export function createArkivReader(options: ReaderOptions = {}) {
   return createPublicClient({
     chain: tiramisu,
-    transport: http(options.rpcUrl ?? TIRAMISU_RPC, { retryCount: 0, timeout: options.timeoutMs ?? 8_000 }),
+    transport: http(options.rpcUrl ?? TIRAMISU_RPC, {
+      retryCount: 0,
+      timeout: options.timeoutMs ?? 8_000,
+      ...(options.accessKey && { fetchOptions: { headers: { "X-API-KEY": options.accessKey } } }),
+    }),
   })
 }
 

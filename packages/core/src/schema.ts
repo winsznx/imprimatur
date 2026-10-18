@@ -47,4 +47,3 @@ export const SIGNING_METHODS: ReadonlySet<string> = new Set([
   "wallet_sendCalls",
 ])
 
-export const ARKIV_EXPLORER = "https://tiramisu.explorer.arkiv.network"
