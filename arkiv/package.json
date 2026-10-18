@@ -6,7 +6,8 @@
   "scripts": {
     "probe": "tsx --env-file-if-exists=../.env probe/probe.ts",
     "fund": "tsx --env-file-if-exists=../.env probe/fund.ts",
-    "repro": "tsx --env-file-if-exists=../.env"
+    "repro": "tsx --env-file-if-exists=../.env",
+    "typecheck": "tsc -p ."
   },
   "dependencies": {
     "@arkiv-network/sdk": "0.8.1",

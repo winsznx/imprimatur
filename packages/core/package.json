@@ -5,11 +5,21 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
-  "exports": { ".": "./src/index.ts" },
-  "publishConfig": {
-    "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+  "exports": {
+    ".": "./src/index.ts"
   },
-  "files": ["dist", "src"],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run",
@@ -23,5 +33,21 @@
     "tsup": "^8.5.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/winsznx/imprimatur",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "arkiv",
+    "web3",
+    "supply-chain",
+    "code-signing",
+    "wallet",
+    "security"
+  ],
+  "engines": {
+    "node": ">=22"
   }
 }

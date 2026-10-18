@@ -1,5 +1,7 @@
 # Imprimatur
 
+[![CI](https://github.com/winsznx/imprimatur/actions/workflows/ci.yml/badge.svg)](https://github.com/winsznx/imprimatur/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-1b2430.svg)](LICENSE)
+
 Your wallet won't sign when a dapp's JavaScript isn't the build its team signed.
 
 **Checkpoint (no install, no wallet):** https://imprimatur-checkpoint.vercel.app
@@ -234,6 +236,14 @@ was our bug (unreadable bodies counted as changes), kept in
 - The RPC node sees which preloaded origins you check. Unlisted sites are never queried.
 - Tiramisu is a testnet. Entities can be wiped; creation transactions are listed in
   [`/arkiv/evidence.md`](arkiv/evidence.md) and `packages/cli/scripts/publish-demo.ts` writes them again.
+
+## Development
+
+```sh
+pnpm install && pnpm typecheck && pnpm test && pnpm build
+```
+
+Layout and rules for changes: [CONTRIBUTING.md](CONTRIBUTING.md). Reporting a vulnerability: [SECURITY.md](SECURITY.md).
 
 ## Licence
 

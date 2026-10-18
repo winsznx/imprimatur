@@ -6,7 +6,8 @@
   "scripts": {
     "scan": "node scan-dapps.mjs",
     "campaign": "tsx --env-file-if-exists=../.env campaign.ts",
-    "latency": "tsx --env-file-if-exists=../.env revocation-latency.ts"
+    "latency": "tsx --env-file-if-exists=../.env revocation-latency.ts",
+    "typecheck": "tsc -p ."
   },
   "dependencies": {
     "@imprimatur/core": "workspace:*",

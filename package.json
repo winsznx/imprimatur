@@ -3,10 +3,18 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.23.0",
-  "engines": { "node": ">=22.10" },
+  "engines": {
+    "node": ">=22.10"
+  },
   "scripts": {
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck"
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck"
+  },
+  "description": "Your wallet won't sign when a dapp's JavaScript isn't the build its team signed onto Arkiv.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/winsznx/imprimatur"
   }
 }
