@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Ops treasury, Treasury Demo</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <p class="demo-banner" id="demo-banner">
+      Demo app on the Tiramisu testnet. Every address here is synthetic, and the wallet is built into the page.
+    </p>
+    <div class="shell">
+      <aside class="side">
+        <div class="safe">
+          <div class="safe-mark" aria-hidden="true"></div>
+          <div>
+            <p class="safe-name">Ops treasury</p>
+            <p class="safe-address mono" title="0x7a3d5f0c2e9b41a8d6c3e5f7091b2d4c6e8f0a12">0x7a3d…0a12</p>
+          </div>
+        </div>
+        <dl class="safe-facts">
+          <div><dt>Threshold</dt><dd>2 of 3 owners</dd></div>
+          <div><dt>Network</dt><dd>Tiramisu testnet</dd></div>
+          <div><dt>Balance</dt><dd>1,240,500 tUSD</dd></div>
+        </dl>
+        <nav class="side-nav" aria-label="Treasury">
+          <a href="#" aria-disabled="true">Assets</a>
+          <a href="#" aria-current="page">Transactions</a>
+          <a href="#" aria-disabled="true">Owners</a>
+          <a href="#" aria-disabled="true">Settings</a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="main-head">
+          <h1>Transactions</h1>
+          <div class="tabs" role="tablist">
+            <button role="tab" aria-selected="true">Queue <span class="count">1</span></button>
+            <button role="tab" aria-selected="false" disabled>History</button>
+          </div>
+        </header>
+
+        <article class="tx" aria-labelledby="tx-title">
+          <header class="tx-head">
+            <span class="tx-nonce">41</span>
+            <h2 id="tx-title">Send 250,000 tUSD</h2>
+            <span class="tx-to">to Warm wallet <span class="mono" title="0x4b2e8d1f6a0c3957be21d4f8a6c09e3b57d19c1d">0x4b2e…9c1d</span></span>
+            <span class="tx-status">Needs 1 more confirmation</span>
+          </header>
+
+          <div class="tx-body">
+            <dl class="tx-detail">
+              <div><dt>Amount</dt><dd>250,000 tUSD</dd></div>
+              <div><dt>Recipient</dt><dd class="mono">0x4b2e8d1f6a0c3957be21d4f8a6c09e3b57d19c1d</dd></div>
+              <div><dt>Type</dt><dd>Call (routine top-up of the warm wallet)</dd></div>
+              <div><dt>Created by</dt><dd>Ben, 11 minutes ago</dd></div>
+            </dl>
+
+            <section class="owners" aria-label="Confirmations">
+              <h3>Confirmations <span>1 of 2</span></h3>
+              <ol>
+                <li class="owner owner-signed"><span class="owner-name">Ben</span> <span class="mono">0x91c4…e07b</span> <span class="owner-state">Signed</span></li>
+                <li class="owner owner-you"><span class="owner-name">Ana (you)</span> <span class="mono" id="you-address">demo wallet</span> <span class="owner-state">Waiting for you</span></li>
+                <li class="owner"><span class="owner-name">Chidi</span> <span class="mono">0x2f8a…5d33</span> <span class="owner-state">Not needed</span></li>
+              </ol>
+            </section>
+          </div>
+
+          <footer class="tx-actions">
+            <button class="button button-primary" id="sign">Sign</button>
+            <button class="button" disabled>Reject</button>
+            <p class="tx-result" id="result" role="status" aria-live="polite"></p>
+          </footer>
+        </article>
+      </main>
+    </div>
+
+    <dialog class="wallet" id="wallet">
+      <form method="dialog">
+        <p class="wallet-title">Demo wallet</p>
+        <p class="wallet-note">Built into this page, not a real wallet. It shows what a blind-signing hardware wallet shows: a hash, no details.</p>
+        <dl class="wallet-detail">
+          <div><dt>Request</dt><dd>Sign typed data</dd></div>
+          <div><dt>From</dt><dd class="mono" id="wallet-origin"></dd></div>
+          <div><dt>Message hash</dt><dd class="mono" id="wallet-hash"></dd></div>
+        </dl>
+        <div class="wallet-actions">
+          <button class="button" value="reject">Reject</button>
+          <button class="button button-primary" value="approve">Approve</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

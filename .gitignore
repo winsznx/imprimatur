@@ -9,3 +9,5 @@ dist/
 .vercel/
 .wrangler/
 coverage/
+dist-*/
+.deploy/

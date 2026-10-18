@@ -1,0 +1,21 @@
+{
+  "name": "@imprimatur/arkiv-evidence",
+  "private": true,
+  "type": "module",
+  "description": "Probe and friction repros. Each script runs against Tiramisu with keys from ../.env.",
+  "scripts": {
+    "probe": "tsx --env-file-if-exists=../.env probe/probe.ts",
+    "fund": "tsx --env-file-if-exists=../.env probe/fund.ts",
+    "repro": "tsx --env-file-if-exists=../.env"
+  },
+  "dependencies": {
+    "@arkiv-network/sdk": "0.8.1",
+    "@imprimatur/core": "workspace:*",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

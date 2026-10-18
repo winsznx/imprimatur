@@ -1,0 +1,17 @@
+{
+  "name": "@imprimatur/demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/tamper.mjs dist dist-tampered",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
+  }
+}
