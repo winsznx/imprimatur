@@ -126,6 +126,31 @@ second client built from it alone reaches the same verdicts.
 
 Measured, with denominators and the misses. Raw output in [`proof/results`](proof/results).
 
+### Would real dapps pass? 15 production frontends, loaded twice
+
+Before asking any team to pin its scripts, we checked whether real dapp frontends serve the same bytes
+twice. [`proof/scan-dapps.mjs`](proof/scan-dapps.mjs) loaded Uniswap, Safe, Aave, Curve, Balancer,
+Revoke, 1inch, Compound, Lido, ENS, PancakeSwap, Jupiter, Morpho, Across and Euler in fresh browser
+profiles, 6 minutes apart, and hashed the bytes the browser received for every script and stylesheet.
+Oct 18 2026, Chromium 156.
+
+| | Count |
+|---|---|
+| Script and stylesheet files seen | 2,247 |
+| Same bytes on both loads | 2,199 |
+| Different bytes under the same URL | 8 |
+| Body unreadable in one load (not counted either way) | 35 |
+| Inline scripts on the first load | 52, of which 10 differed on the second |
+| Same-origin files re-read through the HTTP cache, as the extension does | 1,333 of 1,366 matched the bytes the page ran |
+
+All 8 changed files are third-party scripts injected by infrastructure: five Cloudflare bot-challenge
+scripts (`/cdn-cgi/challenge-platform/…`) and three Google Tag Manager scripts. None of the dapps' own
+bundles changed. So the bundles are pinnable today, and a team adopting Imprimatur has two real costs:
+signing pages can't load per-request third-party scripts like these, and inline scripts that change per
+load (10 of 52 here) have to move into files. Our first run of this scan reported 51 changed files; that
+was our bug (unreadable bodies counted as changes), kept in
+[`proof/results/superseded`](proof/results/superseded).
+
 ## Limitations
 
 - Imprimatur proves the code in your tab is the code the team signed. It can't tell you the team signed
