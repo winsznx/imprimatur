@@ -8,10 +8,14 @@
     "campaign": "tsx --env-file-if-exists=../.env campaign.ts"
   },
   "dependencies": {
-    "@imprimatur/core": "workspace:*"
+    "@imprimatur/core": "workspace:*",
+    "@arkiv-network/sdk": "0.8.1",
+    "viem": "^2.57.7"
   },
   "devDependencies": {
     "playwright": "1.64.1",
-    "tsx": "^4.20.6"
+    "tsx": "^4.20.6",
+    "@types/node": "^24.9.1",
+    "typescript": "^5.9.3"
   }
 }

@@ -40,7 +40,7 @@ async function nextSeq(reader: Reader, origin: string, signer: Hex): Promise<big
 export async function publishRelease(
   wallet: WalletClient,
   reader: Reader,
-  options: { origin: string; version: string; commit: string; manifest: ReleaseManifest; graceMs?: number; seq?: bigint },
+  options: { origin: string; version: string; commit: string; manifest: ReleaseManifest; graceMs?: number; seq?: bigint; lifetimeMinutes?: number },
 ): Promise<WriteResult & { seq: bigint }> {
   const seq = options.seq ?? (await nextSeq(reader, options.origin, wallet.account.address))
   const started = performance.now()
@@ -57,7 +57,9 @@ export async function publishRelease(
     },
     payload: jsonToPayload(options.manifest),
     contentType: JSON_TYPE,
-    expires: ExpirationTime.fromDays(LIFETIME_DAYS.release),
+    expires: options.lifetimeMinutes
+      ? ExpirationTime.fromMinutes(options.lifetimeMinutes)
+      : ExpirationTime.fromDays(LIFETIME_DAYS.release),
     flags: { readonly: true },
   })
   return { entityKey, txHash, seq, ms: performance.now() - started }

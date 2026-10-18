@@ -127,16 +127,28 @@ importers:
 
   proof:
     dependencies:
+      '@arkiv-network/sdk':
+        specifier: 0.8.1
+        version: 0.8.1(typescript@5.9.3)(viem@2.57.7(typescript@5.9.3))
       '@imprimatur/core':
         specifier: workspace:*
         version: link:../packages/core
+      viem:
+        specifier: ^2.57.7
+        version: 2.57.7(typescript@5.9.3)
     devDependencies:
+      '@types/node':
+        specifier: ^24.9.1
+        version: 24.19.2
       playwright:
         specifier: 1.64.1
         version: 1.64.1
       tsx:
         specifier: ^4.20.6
         version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 
