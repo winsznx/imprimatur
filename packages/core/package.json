@@ -1,0 +1,27 @@
+{
+  "name": "@imprimatur/core",
+  "version": "0.1.0",
+  "description": "Verify that the scripts running in a tab are the release a dapp team signed onto Arkiv.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": { ".": "./src/index.ts" },
+  "publishConfig": {
+    "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@arkiv-network/sdk": "0.8.1",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

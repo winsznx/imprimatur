@@ -1,0 +1,11 @@
+internal/
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+.vercel/
+.wrangler/
+coverage/
